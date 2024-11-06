@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "757346680809",
+    "project_id": "jobility-95279",
+    "storage_bucket": "jobility-95279.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:757346680809:android:ec41f0418f237965521578",
+        "android_client_info": {
+          "package_name": "com.example.jobility"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5urwsvi6U6rY5Ay2pl_nnjHCQc1h6bNA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:757346680809:android:3db9293db855032a521578",
+        "android_client_info": {
+          "package_name": "jobility.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5urwsvi6U6rY5Ay2pl_nnjHCQc1h6bNA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
