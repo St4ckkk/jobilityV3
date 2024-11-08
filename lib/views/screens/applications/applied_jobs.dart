@@ -23,7 +23,7 @@ class AppliedJobs extends StatelessWidget {
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(50.h),
         child: CustomAppBar(
-          text: 'Applies Jobs',
+          text: 'Applied Jobs',
           color: Color(kNewBlue.value),
           child: Padding(
             padding: EdgeInsets.all(12.0.h),
@@ -34,48 +34,51 @@ class AppliedJobs extends StatelessWidget {
       body: loginNotifier.loggedIn == false
           ? const NonUser()
           : Stack(
-              children: [
-                Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 15.h),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            topRight: Radius.circular(20.w),
-                            topLeft: Radius.circular(20.w),
-                          ),
-                          color: Color(kGreen.value)),
-                      child: buildStyleContainer(
-                          context,
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20.w),
-                            child: FutureBuilder<List<Applied>>(
-                                future: AppliedHelper.getApplied(),
-                                builder: ((context, snapshot) {
-                                  if (snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return const PageLoader();
-                                  } else if (snapshot.hasError) {
-                                    return Text("Error: ${snapshot.error}");
-                                  } else {
-                                    var jobs = snapshot.data;
-                                    return ListView.builder(
-                                        itemCount: jobs!.length,
-                                        scrollDirection: Axis.vertical,
-                                        itemBuilder: (context, index) {
-                                          final job = jobs[index].job;
+        children: [
+          Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 15.h),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(20.w),
+                      topLeft: Radius.circular(20.w),
+                    ),
+                    color: Color(kGreen.value)),
+                child: buildStyleContainer(
+                    context,
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      child: FutureBuilder<List<Applied>>(
+                          future: AppliedHelper.getApplied(),
+                          builder: ((context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const PageLoader();
+                            } else if (snapshot.hasError) {
+                              return Text("Error: ${snapshot.error}");
+                            } else {
+                              var jobs = snapshot.data;
+                              return ListView.builder(
+                                  itemCount: jobs!.length,
+                                  scrollDirection: Axis.vertical,
+                                  itemBuilder: (context, index) {
+                                    final applied = jobs[index];
+                                    final job = applied.job;
 
-                                          return AppliedTile(job: job);
-                                        });
-                                  }
-                                })),
-                          )),
-                    ))
-              ],
-            ),
+                                    return AppliedTile(
+                                      job: job,
+                                      status: applied.status,
+                                    );
+                                  });
+                            }
+                          })),
+                    )),
+              ))
+        ],
+      ),
     );
   }
 }

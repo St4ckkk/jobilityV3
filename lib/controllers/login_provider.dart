@@ -43,33 +43,42 @@ class LoginNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  String _userUid = '';
+
+  String get userUid => _userUid;
+
+  set userUid(String uid) {
+    _userUid = uid;
+    notifyListeners();
+  }
+
+  String username = '';
+  String name = '';
+  String profile = '';
+
   login(String model, ZoomNotifier zoomNotifier) {
-    AuthHelper.login(model).then((response) {
-<<<<<<< HEAD
+    loader = true;
+    AuthHelper.login(model).then((response) async {
+      loader = false;
       if (response == true) {
-        loader = false;
-        zoomNotifier.currentIndex = 0;
-        Get.offAll(() => const Mainscreen());
-      } else {
-        loader = false;
-        Get.snackbar("Failed to Sign in", "Please check your credentials",
-            colorText: Color(kLight.value),
-            backgroundColor: Color(kOrange.value),
-            icon: const Icon(Icons.add_alert));
-=======
-      loader = false; // Assuming 'loader' is used to show a loading indicator
-      if (response == true) {
-        // Show confirmation snackbar
+        // Retrieve user UID from SharedPreferences
+        userUid = await AuthHelper.getUserUid() ?? '';
+
+        // Debugging statement
+        debugPrint('LoginNotifier: Retrieved userUid after login: $userUid');
+
+        if (userUid.isEmpty) {
+          debugPrint('Error: userUid is empty or null');
+        }
+
         Get.snackbar(
           "Login Successful",
           "Welcome back! You are now logged in.",
           colorText: Color(kDark.value),
-          backgroundColor: Color(kGreen.value), // Use a different color for success
+          backgroundColor: Color(kGreen.value),
           icon: const Icon(Icons.check_circle),
         );
-
-        zoomNotifier.currentIndex = 0; // Set the current index for the ZoomNotifier
-        // Navigate to Mainscreen after a short delay
+        zoomNotifier.currentIndex = 0;
         Future.delayed(const Duration(seconds: 2), () {
           Get.offAll(() => const Mainscreen());
         });
@@ -81,15 +90,10 @@ class LoginNotifier extends ChangeNotifier {
           backgroundColor: Color(kOrange.value),
           icon: const Icon(Icons.add_alert),
         );
->>>>>>> 80bcbd8 (hehe)
       }
     });
   }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 80bcbd8 (hehe)
   getPref() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -97,7 +101,15 @@ class LoginNotifier extends ChangeNotifier {
     loggedIn = prefs.getBool('loggedIn') ?? false;
     username = prefs.getString('username') ?? '';
     name = prefs.getString('name') ?? '';
-    userUid = prefs.getString('uid') ?? '';
+    userUid = prefs.getString('uid') ?? ''; // Ensure this is the correct key
+
+    // Debugging statement
+    debugPrint('LoginNotifier: Retrieved userUid from getPref: $userUid');
+
+    if (userUid.isEmpty) {
+      debugPrint('Error: userUid is empty or null');
+    }
+
     profile = prefs.getString('profile') ?? '';
   }
 
@@ -105,5 +117,6 @@ class LoginNotifier extends ChangeNotifier {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('loggedIn', false);
     await prefs.remove('token');
+    await prefs.remove('uid');
   }
 }

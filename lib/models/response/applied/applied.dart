@@ -8,40 +8,27 @@ class Applied {
     final String id;
     final String user;
     final Job job;
-<<<<<<< HEAD
-=======
     final String status;
->>>>>>> 80bcbd8 (hehe)
 
     Applied({
         required this.id,
         required this.user,
         required this.job,
-<<<<<<< HEAD
-=======
         required this.status,
-
->>>>>>> 80bcbd8 (hehe)
     });
 
     factory Applied.fromJson(Map<String, dynamic> json) => Applied(
         id: json["_id"],
         user: json["user"],
         job: Job.fromJson(json["job"]),
-<<<<<<< HEAD
-=======
-        status: json["status"]
->>>>>>> 80bcbd8 (hehe)
+        status: json["status"],
     );
 
     Map<String, dynamic> toJson() => {
         "_id": id,
         "user": user,
         "job": job.toJson(),
-<<<<<<< HEAD
-=======
-        "status": status
->>>>>>> 80bcbd8 (hehe)
+        "status": status,
     };
 }
 
@@ -79,11 +66,11 @@ class Job {
         company: json["company"],
         hiring: json["hiring"],
         salary: json["salary"],
-        agentName: json["agentName"],
         period: json["period"],
         contract: json["contract"],
         imageUrl: json["imageUrl"],
         agentId: json["agentId"],
+        agentName: json["agentName"],
     );
 
     Map<String, dynamic> toJson() => {
@@ -97,5 +84,6 @@ class Job {
         "contract": contract,
         "imageUrl": imageUrl,
         "agentId": agentId,
+        "agentName": agentName,
     };
 }

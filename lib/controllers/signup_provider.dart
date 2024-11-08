@@ -37,15 +37,10 @@ class SignUpNotifier extends ChangeNotifier {
   }
 
   signUp(String model) {
+    loader = true;
     AuthHelper.signup(model).then((response) {
-<<<<<<< HEAD
-      if (response == true) {
-        loader = false;
-        Get.offAll(() => const LoginPage());
-=======
       loader = false;
       if (response == true) {
-
         Get.snackbar(
           "Sign Up Successful",
           "Welcome! You can now log in.",
@@ -58,13 +53,14 @@ class SignUpNotifier extends ChangeNotifier {
         Future.delayed(const Duration(seconds: 2), () {
           Get.offAll(() => const LoginPage());
         });
->>>>>>> 80bcbd8 (hehe)
       } else {
-        loader = false;
-        Get.snackbar("Failed to Sign up", "Please check your credentials",
-            colorText: Color(kLight.value),
-            backgroundColor: Color(kOrange.value),
-            icon: const Icon(Icons.add_alert));
+        Get.snackbar(
+          "Failed to Sign up",
+          "Please check your credentials",
+          colorText: Color(kLight.value),
+          backgroundColor: Color(kOrange.value),
+          icon: const Icon(Icons.add_alert),
+        );
       }
     });
   }

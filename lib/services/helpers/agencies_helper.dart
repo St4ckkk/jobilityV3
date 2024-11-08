@@ -9,7 +9,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AgencyHelper {
   static var client = https.Client();
 
-
   static Future<List<Agents>> getAgents() async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -26,9 +25,6 @@ class AgencyHelper {
 
       var url = Uri.https(Config.apiUrl, Config.getAgentsUrl);
       var response = await client.get(url, headers: requestHeaders);
-
-      // Add this debug print
-      // print('API Response: ${response.body}');
 
       if (response.statusCode == 200) {
         try {
@@ -52,7 +48,7 @@ class AgencyHelper {
     String? token = prefs.getString('token');
 
     if (token == null) {
-      throw Exception('Failed to get  token');
+      throw Exception('Failed to get token');
     }
 
     Map<String, String> requestHeaders = {
@@ -62,11 +58,7 @@ class AgencyHelper {
 
     var url = Uri.https(Config.apiUrl, '${Config.getAgentsUrl}/$uid');
     var response = await client.get(url, headers: requestHeaders);
-<<<<<<< HEAD
-    print('API Response: ${response.body}');
-=======
-    // print('API Response: ${response.body}');
->>>>>>> 80bcbd8 (hehe)
+
     if (response.statusCode == 200) {
       var agent = getAgentFromJson(response.body);
       return agent;
@@ -82,11 +74,7 @@ class AgencyHelper {
 
     var url = Uri.https(Config.apiUrl, "${Config.jobs}/agent/$uid");
     var response = await client.get(url, headers: requestHeaders);
-<<<<<<< HEAD
 
-=======
-    print('API Response: ${response.body}');
->>>>>>> 80bcbd8 (hehe)
     if (response.statusCode == 200) {
       var agents = jobsResponseFromJson(response.body);
       return agents;

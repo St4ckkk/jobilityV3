@@ -22,12 +22,11 @@ import 'package:jobility/views/screens/auth/widgets/skills.dart';
 import 'package:jobility/views/screens/jobs/add_jobs.dart';
 import 'package:jobility/views/screens/mainscreen.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-<<<<<<< HEAD
-=======
+import 'edit_profile_page.dart';
 import 'login.dart';
 
->>>>>>> 80bcbd8 (hehe)
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key, required this.drawer});
   final bool drawer;
@@ -61,12 +60,32 @@ class _ProfilePageState extends State<ProfilePage> {
         profile = profileData;
         isLoading = false;
       });
+
+      // Store agentId in SharedPreferences if the user is an agent
+      if (profileData.isAgent) {
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('agentId', profileData.id);
+      }
     } catch (e) {
       print('Error loading profile: $e');
       setState(() {
         isLoading = false;
       });
     }
+  }
+
+  Future<void> _handleResumeUpload() async {
+    setState(() { isLoading = true; }); // Start loading
+
+    bool uploadResult = await AuthHelper.uploadResume();
+    if (uploadResult) {
+      Get.snackbar("Success", "Resume uploaded successfully", backgroundColor: Colors.green, colorText: Colors.white);
+      await initializeProfile();
+    } else {
+      Get.snackbar("Error", "Failed to upload resume", backgroundColor: Colors.red, colorText: Colors.white);
+    }
+
+    setState(() { isLoading = false; }); // End loading
   }
 
   Widget buildProfileHeader() {
@@ -149,6 +168,8 @@ class _ProfilePageState extends State<ProfilePage> {
         const HeightSpacer(size: 20),
         const SkillsWidget(),
         const HeightSpacer(size: 20),
+        buildDisabilitySection(), // Add disability section
+        const HeightSpacer(size: 20),
         buildAgentSection(),
         const HeightSpacer(size: 20),
         buildLogoutButton(),
@@ -209,6 +230,59 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget buildDisabilitySection() {
+    if (profile?.disability != null && profile!.disability!.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ReusableText(
+              text: 'Disability Information',
+              style: appStyle(14, Color(kDark.value), FontWeight.w600)
+          ),
+          const HeightSpacer(size: 10),
+          Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+                color: Color(kLightGrey.value),
+                borderRadius: const BorderRadius.all(Radius.circular(12))
+            ),
+            child: ReusableText(
+              text: profile!.disability!,
+              style: appStyle(12, Color(kDark.value), FontWeight.w400),
+            ),
+          ),
+          const HeightSpacer(size: 10),
+          if (profile?.pwdIdImage != null && profile!.pwdIdImage!.isNotEmpty)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ReusableText(
+                  text: 'PWD ID Card',
+                  style: appStyle(15, Color(kDark.value), FontWeight.w600),
+                ),
+                const HeightSpacer(size: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(12.w)),
+                  child: CachedNetworkImage(
+                    imageUrl: profile!.pwdIdImage!,
+                    width: 300.w,
+                    height: 200.h,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const Center(
+                      child: CircularProgressIndicator.adaptive(),
+                    ),
+                    errorWidget: (context, url, error) => const Icon(Icons.error),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      );
+    } else {
+      return Container();
+    }
+  }
+
   Widget buildAgentSection() {
     if (profile?.isAgent ?? false) {
       return Column(
@@ -254,20 +328,6 @@ class _ProfilePageState extends State<ProfilePage> {
     var loginNotifier = Provider.of<LoginNotifier>(context);
 
     return CustomOutlineBtn(
-<<<<<<< HEAD
-        width: width,
-        onTap: () {
-          zoomNotifier.currentIndex = 0;
-          loginNotifier.logout();
-          Get.offAll(() => const Mainscreen());
-        },
-        hieght: 40.h,
-        text: "Proceed to logout",
-        color: Color(kNewBlue.value)
-    );
-  }
-
-=======
       width: width,
       onTap: () {
         // Show confirmation snackbar before logout
@@ -294,18 +354,9 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-
->>>>>>> 80bcbd8 (hehe)
   Future<void> _handleEditProfile() async {
-    // Add edit profile functionality here
-    // After editing, refresh the profile
-    await initializeProfile();
-  }
-
-  Future<void> _handleResumeUpload() async {
-    // Implement resume upload functionality
-    // After upload, refresh the profile
-    await initializeProfile();
+    // Navigate to EditProfilePage
+    Get.to(() => const EditProfilePage());
   }
 
   @override

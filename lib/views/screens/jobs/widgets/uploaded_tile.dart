@@ -26,11 +26,7 @@ class UploadedTile extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 8.0),
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 10.w),
-<<<<<<< HEAD
-            height: hieght * 0.1,
-=======
-            height: 90.0,
->>>>>>> 80bcbd8 (hehe)
+            height: 85,
             width: width,
             decoration: BoxDecoration(
                 color: const Color(0x09000000),
@@ -72,20 +68,13 @@ class UploadedTile extends StatelessWidget {
                                     FontWeight.w500)),
                           ],
                         ),
-
-                        text == 'popular' ?
-                        CustomOutlineBtn(
-                          width: 90.w,
-                          hieght: 36.h,
-                          text: "View",
-                          color: Color(kLightBlue.value))
-                          
-                          :CustomOutlineBtn(
-                          width: 90.w,
-                          hieght: 36.h,
-                          text: "Apply",
-                          color: Color(kLightBlue.value))
                       ],
+                    ),
+                    CustomOutlineBtn(
+                      width: 90.w,
+                      hieght: 36.h,
+                      text: text == 'popular' ? "View" : "Apply",
+                      color: Color(kLightBlue.value),
                     ),
                   ],
                 )

@@ -1,4 +1,8 @@
+// get_job.dart
 import 'dart:convert';
+
+import 'accepted_disability.dart';
+
 
 GetJobRes getJobResFromJson(String str) => GetJobRes.fromJson(json.decode(str));
 
@@ -18,6 +22,7 @@ class GetJobRes {
         required this.requirements,
         required this.imageUrl,
         required this.agentId,
+        required this.acceptedDisabilities,
         // required this.updatedAt,
     });
 
@@ -33,6 +38,7 @@ class GetJobRes {
     final List<String> requirements;
     final String imageUrl;
     final String agentId;
+    final List<AcceptedDisability> acceptedDisabilities;
     // final DateTime updatedAt;
 
     factory GetJobRes.fromJson(Map<String, dynamic> json) => GetJobRes(
@@ -48,6 +54,8 @@ class GetJobRes {
         requirements: List<String>.from(json["requirements"].map((x) => x)),
         imageUrl: json["imageUrl"],
         agentId: json["agentId"],
+        acceptedDisabilities: List<AcceptedDisability>.from(
+            json["acceptedDisabilities"].map((x) => AcceptedDisability.fromJson(x))),
         // updatedAt: DateTime.parse(json["updatedAt"]),
     );
 
@@ -64,6 +72,7 @@ class GetJobRes {
         "requirements": List<dynamic>.from(requirements.map((x) => x)),
         "imageUrl": imageUrl,
         "agentId": agentId,
+        "acceptedDisabilities": List<dynamic>.from(acceptedDisabilities.map((x) => x.toJson())),
         // "updatedAt": updatedAt.toIso8601String(),
     };
 }

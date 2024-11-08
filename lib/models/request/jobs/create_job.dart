@@ -1,4 +1,8 @@
+// create_job.dart
 import 'dart:convert';
+
+import '../../response/jobs/accepted_disability.dart';
+
 
 String createJobsRequestToJson(CreateJobsRequest data) => json.encode(data.toJson());
 
@@ -16,10 +20,7 @@ class CreateJobsRequest {
         required this.agentId,
         required this.agentName,
         required this.requirements,
-<<<<<<< HEAD
-=======
         required this.acceptedDisabilities,
->>>>>>> 80bcbd8 (hehe)
     });
 
     final String title;
@@ -34,10 +35,7 @@ class CreateJobsRequest {
     final String agentId;
     final String agentName;
     final List<String> requirements;
-<<<<<<< HEAD
-=======
     final List<AcceptedDisability> acceptedDisabilities;
->>>>>>> 80bcbd8 (hehe)
 
     Map<String, dynamic> toJson() => {
         "title": title,
@@ -52,24 +50,6 @@ class CreateJobsRequest {
         "agentId": agentId,
         "agentName": agentName,
         "requirements": List<dynamic>.from(requirements.map((x) => x)),
-<<<<<<< HEAD
-=======
         "acceptedDisabilities": List<dynamic>.from(acceptedDisabilities.map((x) => x.toJson())),
-    };
-}
-
-class AcceptedDisability {
-    AcceptedDisability({
-        required this.type,
-        required this.specificNames,
-    });
-
-    final String type;
-    final List<String> specificNames;
-
-    Map<String, dynamic> toJson() => {
-        "type": type,
-        "specificNames": List<dynamic>.from(specificNames.map((x) => x)),
->>>>>>> 80bcbd8 (hehe)
     };
 }
