@@ -93,21 +93,37 @@ class _JobDetailsState extends State<JobDetails> with SingleTickerProviderStateM
     isAgent = prefs.getBool('isAgent') ?? false;
   }
 
-  createChat(Map<String, dynamic> jobDetails, List<String> users,
-      String chatRoomId, String messageType) {
+  createChat(Map<String, dynamic> jobDetails, List<String> users, String chatRoomId, String messageType) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userUid = prefs.getString('uid');
+    String name = prefs.getString('name') ?? 'Anonymous';
+    String profile = prefs.getString('profile') ?? '';
+
+    if (userUid == null || userUid.isEmpty) {
+      print('Error: User UID is empty or not found');
+      return;
+    }
+
     Map<String, dynamic> chatData = {
-      'users': users,
-      'chatRoomId': chatRoomId,
-      'read': false,
-      'job': jobDetails,
-      'profile': profile,
-      'sender': userUid,
-      'name': username,
       'agentName': widget.agentName,
-      'messageType': messageType,
+      'chatRoomId': chatRoomId,
+      'job': jobDetails,
+      'company': jobDetails['company'],
+      'image_url': jobDetails['image_url'],
+      'job_id': jobDetails['job_id'],
+      'salary': jobDetails['salary'],
+      'title': jobDetails['title'],
       'lastChat': "Good Day, Sir! I'm interested in this job.",
-      'lastChatTime': Timestamp.now()
+      'lastChatTime': Timestamp.now(),
+      'messageType': messageType,
+      'name': name,
+      'profile': profile,
+      'read': false,
+      'sender': userUid,
+      'users': users,
     };
+
+    print('Creating chat room with data: $chatData');
     services.createChatRoom(chatData);
   }
 
@@ -533,6 +549,13 @@ class _JobDetailsState extends State<JobDetails> with SingleTickerProviderStateM
                         onTap: () async {
                           if (!loginNotifier.loggedIn) return;
 
+                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                          String? userUid = prefs.getString('uid');
+                          if (userUid == null || userUid.isEmpty) {
+                            print('Error: User UID is empty or not found');
+                            return;
+                          }
+
                           Map<String, dynamic> jobDetails = {
                             'job_id': job.id,
                             'image_url': job.imageUrl,
@@ -545,9 +568,11 @@ class _JobDetailsState extends State<JobDetails> with SingleTickerProviderStateM
                           String chatRoomId = '${job.id}.$userUid';
                           String messageType = 'text';
 
+                          print('Constructed chatRoomId: $chatRoomId');
+
                           bool doesChatExist = await services.chatRoomExist(chatRoomId);
 
-                          if (doesChatExist == false) {
+                          if (!doesChatExist) {
                             createChat(jobDetails, users, chatRoomId, messageType);
                             AppliedPost model = AppliedPost(job: job.id);
                             var newModel = appliedPostToJson(model);

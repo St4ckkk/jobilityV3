@@ -36,7 +36,6 @@ class AuthHelper {
     }
   }
 
-  // Method to log in a user
   static Future<bool> login(String model) async {
     Map<String, String> requestHeaders = {
       'Content-Type': 'application/json',
@@ -69,13 +68,9 @@ class AuthHelper {
     }
   }
 
-  // Method to retrieve the user's UID
   static Future<String?> getUserUid() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? userUid = prefs.getString('uid'); // Make sure you use the correct key here
-    // Debugging statement
-    debugPrint('AuthHelper: Retrieved user UID: $userUid');
-    return userUid;
+    return prefs.getString('uid'); // Make sure you use the correct key here
   }
 
   // Method to get the user profile
