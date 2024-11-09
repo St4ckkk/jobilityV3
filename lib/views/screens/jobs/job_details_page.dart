@@ -29,6 +29,7 @@ import 'package:jobility/views/screens/mainscreen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:intl/intl.dart';
 
 import '../../../models/request/jobs/create_review.dart';
 
@@ -146,6 +147,8 @@ class _JobDetailsState extends State<JobDetails> with SingleTickerProviderStateM
     );
   }
 
+
+
   Widget _buildReviewsTab() {
     return Padding(
       padding: EdgeInsets.all(16.w),
@@ -201,8 +204,8 @@ class _JobDetailsState extends State<JobDetails> with SingleTickerProviderStateM
                   return GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      crossAxisSpacing: 10.w,
-                      mainAxisSpacing: 10.w,
+                      crossAxisSpacing: 8.w,
+                      mainAxisSpacing: 8.w,
                       childAspectRatio: 4 / 4,
                     ),
                     itemCount: reviewsList.length,
@@ -255,9 +258,19 @@ class _JobDetailsState extends State<JobDetails> with SingleTickerProviderStateM
                                               color: Colors.grey[200],
                                               borderRadius: BorderRadius.circular(10.w),
                                             ),
-                                            child: Text(
-                                              review.comment,
-                                              style: appStyle(14, Color(kDarkGrey.value), FontWeight.normal),
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  review.comment,
+                                                  style: appStyle(14, Color(kDarkGrey.value), FontWeight.normal),
+                                                ),
+                                                SizedBox(height: 10.h),
+                                                Text(
+                                                  DateFormat('yyyy-MM-dd').format(review.createdAt), // Format the date
+                                                  style: appStyle(12, Color(kDarkGrey.value), FontWeight.normal),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ],
@@ -286,7 +299,10 @@ class _JobDetailsState extends State<JobDetails> with SingleTickerProviderStateM
                         child: Container(
                           padding: EdgeInsets.all(12.w),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            image: DecorationImage(
+                              image: AssetImage('assets/images/registration-cover.jpg'),
+                              fit: BoxFit.cover,
+                            ),
                             borderRadius: BorderRadius.circular(10.w),
                             boxShadow: [
                               BoxShadow(
@@ -334,14 +350,24 @@ class _JobDetailsState extends State<JobDetails> with SingleTickerProviderStateM
                               Container(
                                 padding: EdgeInsets.all(10.w),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey[200],
+                                  color: Colors.grey[200]?.withOpacity(0.8),
                                   borderRadius: BorderRadius.circular(10.w),
                                 ),
-                                child: Text(
-                                  review.comment,
-                                  style: appStyle(14, Color(kDarkGrey.value), FontWeight.normal),
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      review.comment,
+                                      style: appStyle(14, Color(kDarkGrey.value), FontWeight.normal),
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    SizedBox(height: 10.h),
+                                    Text(
+                                      DateFormat('yyyy-MM-dd').format(review.createdAt), // Format the date
+                                      style: appStyle(12, Color(kDarkGrey.value), FontWeight.normal),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
