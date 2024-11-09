@@ -38,7 +38,7 @@ class PopularJobs extends StatelessWidget {
                         return JobHorizontalTile(
                           job: job,
                           onTap: () {
-                            Get.to(() =>  JobDetails(id: job.id,title: job.title,agentName: job.agentName,));
+                            Get.to(() =>  JobDetails(id: job.id,title: job.title,company: job.company,));
                           },
                         );
                       });

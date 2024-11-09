@@ -37,7 +37,7 @@ class ViewAllJobAlerts extends StatelessWidget {
                 Get.to(() => JobDetails(
                   title: alert.jobId.title,
                   id: alert.jobId.id,
-                  agentName: alert.jobId.agentName,
+                  company: alert.jobId.agentName,
                 ));
               },
               child: Padding(

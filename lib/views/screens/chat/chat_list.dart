@@ -38,6 +38,7 @@ class _ChatListState extends State<ChatList> with TickerProviderStateMixin {
 
   FirebaseServices services = FirebaseServices();
   String userUid = '';
+  bool isAgent = false;
   Stream<QuerySnapshot>? _chat; // Make _chat nullable
 
   @override
@@ -48,17 +49,17 @@ class _ChatListState extends State<ChatList> with TickerProviderStateMixin {
 
   Future<void> _getUserUid() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      userUid = prefs.getString('uid') ?? '';
-      if (userUid.isNotEmpty) {
-        // Initialize the stream only when userUid is available
-        _chat = FirebaseFirestore.instance
-            .collection('chats')
-            .where('users', arrayContains: userUid)
-            .snapshots();
-      }
-    });
+    userUid = prefs.getString('uid') ?? '';
+    isAgent = prefs.getBool('isAgent') ?? false;
+    if (userUid.isNotEmpty) {
+      // Initialize the stream only when userUid is available
+      _chat = FirebaseFirestore.instance
+          .collection('chats')
+          .where('users', arrayContains: userUid)
+          .snapshots();
+    }
     print('Retrieved userUid: $userUid');
+    print('Is Agent: $isAgent');
   }
 
   @override
@@ -68,115 +69,226 @@ class _ChatListState extends State<ChatList> with TickerProviderStateMixin {
       services.userStatus();
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF171717),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF171717),
-        elevation: 0,
-        leading: Padding(
-          padding: EdgeInsets.all(12.w),
-          child: DrawerWidget(color: Color(kLight.value)),
-        ),
-        title: loginNotifier.loggedIn == false
-            ? const SizedBox.shrink()
-            : TabBar(
-          controller: tabController,
-          indicator: BoxDecoration(
-            color: const Color(0x00BABABA),
-            borderRadius: BorderRadius.all(Radius.circular(25.w)),
-          ),
-          labelColor: Color(kLight.value),
-          unselectedLabelColor: Colors.grey.withOpacity(.5),
-          padding: EdgeInsets.all(3.w),
-          labelStyle: appStyle(12, Color(kLight.value), FontWeight.w500),
-          tabs: const [
-            Tab(text: "MESSAGE"),
-            Tab(text: "ONLINE"),
-            Tab(text: "GROUPS"),
-          ],
-        ),
-      ),
-      body: loginNotifier.loggedIn == false
-          ? const NonUser()
-          : TabBarView(controller: tabController, children: [
-        Stack(
-          children: [
-            // Other code here...
-            Positioned(
-              top: 150.h,
-              right: 0,
-              left: 0,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(kGreen.value),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20.w),
-                    topRight: Radius.circular(20.w),
-                  ),
+    return FutureBuilder(
+      future: _getUserUid(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else {
+          print('Building ChatList for userUid: $userUid');
+          print('User is ${isAgent ? "an Agent" : "a Regular User"}');
+
+          return Scaffold(
+            backgroundColor: const Color(0xFF171717),
+            appBar: AppBar(
+              backgroundColor: const Color(0xFF171717),
+              elevation: 0,
+              leading: Padding(
+                padding: EdgeInsets.all(12.w),
+                child: DrawerWidget(color: Color(kLight.value)),
+              ),
+              title: loginNotifier.loggedIn == false
+                  ? const SizedBox.shrink()
+                  : TabBar(
+                controller: tabController,
+                indicator: BoxDecoration(
+                  color: const Color(0x00BABABA),
+                  borderRadius: BorderRadius.all(Radius.circular(25.w)),
                 ),
-                child: _chat != null
-                    ? StreamBuilder<QuerySnapshot>(
-                  stream: _chat,
-                  builder: (BuildContext context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Text("Error: ${snapshot.error}");
-                    } else if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const PageLoader();
-                    } else if (snapshot.data!.docs.isEmpty) {
-                      return const NoSearchResults(text: 'No chats available');
-                    }
-
-                    final chatList = snapshot.data!.docs;
-
-                    return ListView.builder(
-                      itemCount: chatList.length,
-                      shrinkWrap: true,
-                      padding: EdgeInsets.only(left: 10.w, top: 10.w),
-                      itemBuilder: (context, index) {
-                        final chat = chatList[index].data() as Map<String, dynamic>;
-                        Timestamp lastChatTime = chat['lastChatTime'];
-                        DateTime lastChatDateTime = lastChatTime.toDate();
-
-                        return Consumer<AgentNotifier>(
-                          builder: (context, agentNotifier, child) {
-                            return GestureDetector(
-                              onTap: () {
-                                if (chat['sender'] != userUid) {
-                                  services.updateCount(chat['chatRoomId']);
-                                }
-                                agentNotifier.chat = chat;
-                                Get.to(() => const ChatPage());
-                              },
-                              child: buildChatRow(
-                                username == chat['name'] ? chat['agentName'] : chat['name'],
-                                chat['lastChat'],
-                                chat['profile'],
-                                chat['read'] == true ? 0 : 1,
-                                lastChatDateTime,
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    );
-                  },
-                )
-                    : const Center(child: Text('Loading...')),
+                labelColor: Color(kLight.value),
+                unselectedLabelColor: Colors.grey.withOpacity(.5),
+                padding: EdgeInsets.all(3.w),
+                labelStyle: appStyle(12, Color(kLight.value), FontWeight.w500),
+                tabs: const [
+                  Tab(text: "MESSAGE"),
+                  Tab(text: "ONLINE"),
+                  Tab(text: "GROUPS"),
+                ],
               ),
             ),
-          ],
-        ),
-        Container(
-          color: Colors.green,
-        ),
-        Container(
-          color: Colors.blueAccent,
-        ),
-      ]),
+            body: loginNotifier.loggedIn == false
+                ? const NonUser()
+                : TabBarView(controller: tabController, children: [
+              Stack(
+                children: [
+                  Positioned(
+                      top: 5,
+                      right: 0,
+                      left: 0,
+                      child: Container(
+                        padding: EdgeInsets.only(top: 15.w, left: 25.w, right: 0.w),
+                        height: 220.h,
+                        decoration: BoxDecoration(
+                          color: Color(kNewBlue.value),
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(20.w),
+                            topRight: Radius.circular(20.w),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                ReusableText(
+                                    text: "Agents and Companies",
+                                    style: appStyle(12, Color(kLight.value), FontWeight.normal)),
+                                IconButton(
+                                    onPressed: () {},
+                                    icon: Icon(
+                                      AntDesign.ellipsis1,
+                                      color: Color(kLight.value),
+                                    ))
+                              ],
+                            ),
+                            Consumer<AgentNotifier>(
+                              builder: (context, agentNotifier, child) {
+                                var agents = agentNotifier.getAgents();
+                                return FutureBuilder<List<Agents>>(
+                                    future: agents,
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return SizedBox(
+                                          height: 90.h,
+                                          child: ListView.builder(
+                                              itemCount: 7,
+                                              scrollDirection: Axis.horizontal,
+                                              itemBuilder: (context, index) {
+                                                return GestureDetector(
+                                                  onTap: () {},
+                                                  child: buildAgentAvatar(
+                                                    "Agent $index",
+                                                    imageUrl,
+                                                  ),
+                                                );
+                                              }),
+                                        );
+                                      } else if (snapshot.hasError) {
+                                        return Text('Error: ${snapshot.error}');
+                                      } else {
+                                        return SizedBox(
+                                          height: 90.h,
+                                          child: ListView.builder(
+                                              itemCount: snapshot.data!.length,
+                                              scrollDirection: Axis.horizontal,
+                                              itemBuilder: (context, index) {
+                                                var agent = snapshot.data![index];
+                                                return GestureDetector(
+                                                  onTap: () {
+                                                    agentNotifier.agent = agent;
+                                                    Get.to(() => const AgentDetails());
+                                                  },
+                                                  child: buildAgentAvatar(
+                                                    agent.name ?? 'Unknown Agent',
+                                                    agent.profile ?? '',
+                                                  ),
+                                                );
+                                              }),
+                                        );
+                                      }
+                                    });
+                              },
+                            )
+                          ],
+                        ),
+                      )),
+                  Positioned(
+                      top: 150.h,
+                      right: 0,
+                      left: 0,
+                      child: Container(
+                          width: width,
+                          height: hieght,
+                          decoration: BoxDecoration(
+                            color: Color(kGreen.value),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(20.w),
+                              topRight: Radius.circular(20.w),
+                            ),
+                          ),
+                          child: _chat != null
+                              ? StreamBuilder<QuerySnapshot>(
+                            stream: _chat,
+                            builder: (BuildContext context, snapshot) {
+                              if (snapshot.hasError) {
+                                return Text("Error: ${snapshot.error}");
+                              } else if (snapshot.connectionState == ConnectionState.waiting) {
+                                return const PageLoader();
+                              } else if (snapshot.data!.docs.isEmpty) {
+                                return const NoSearchResults(text: 'No chats available');
+                              }
+
+                              final chatList = snapshot.data!.docs;
+
+                              return ListView.builder(
+                                itemCount: chatList.length,
+                                shrinkWrap: true,
+                                padding: EdgeInsets.only(left: 10.w, top: 10.w),
+                                itemBuilder: (context, index) {
+                                  final chat = chatList[index].data() as Map<String, dynamic>;
+                                  Timestamp lastChatTime = chat['lastChatTime'];
+                                  DateTime lastChatDateTime = lastChatTime.toDate();
+
+                                  print('Chat data: $chat');
+                                  print('Receiver ID: ${chat['receiver']}');
+                                  print('Logged-in User ID: $userUid');
+                                  print('Is Receiver the Logged-in User: ${chat['receiver'] == userUid}');
+
+                                  String displayName;
+                                  String profileImage;
+
+                                  if (chat['sender'] == userUid) {
+                                    displayName = chat['agentName'] ?? 'Unknown Receiver';
+                                    profileImage = chat['receiver'] == userUid ? imageUrl : chat['receiverProfile'] ?? '';
+                                  } else {
+                                    displayName = chat['senderName'] ?? 'Unknown Sender';
+                                    profileImage = chat['sender'] == userUid ? imageUrl : chat['senderProfile'] ?? '';
+                                  }
+
+                                  return Consumer<AgentNotifier>(
+                                    builder: (context, agentNotifier, child) {
+                                      return GestureDetector(
+                                        onTap: () {
+                                          if (chat['sender'] != userUid) {
+                                            services.updateCount(chat['chatRoomId']);
+                                          }
+                                          agentNotifier.chat = chat;
+                                          Get.to(() => const ChatPage());
+                                        },
+                                        child: buildChatRow(
+                                          displayName,
+                                          chat['lastChat'] ?? '',
+                                          profileImage,
+                                          chat['read'] == true ? 0 : 1,
+                                          lastChatDateTime,
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                          )
+                              : const Center(child: Text('Loading...'))))
+                ],
+              ),
+              Container(
+                height: hieght,
+                width: width,
+                color: Colors.green,
+              ),
+              Container(
+                height: hieght,
+                width: width,
+                color: Colors.blueAccent,
+              ),
+            ]),
+          );
+        }
+      },
     );
   }
 }
-
 
 Padding buildAgentAvatar(String name, String filename) {
   return Padding(
@@ -198,7 +310,7 @@ Padding buildAgentAvatar(String name, String filename) {
 }
 
 Column buildChatRow(
-    String name, String message, String filename, int msgCount, time) {
+    String displayName, String message, String filename, int msgCount, DateTime time) {
   return Column(
     children: [
       FittedBox(
@@ -214,7 +326,7 @@ Column buildChatRow(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ReusableText(
-                        text: name,
+                        text: displayName,
                         style: appStyle(12, Colors.grey, FontWeight.w400)),
                     const HeightSpacer(size: 5),
                     SizedBox(

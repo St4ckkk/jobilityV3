@@ -32,7 +32,7 @@ class AppliedTile extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         Get.to(() => JobDetails(
-            title: job.title, id: job.id, agentName: job.agentName));
+            title: job.title, id: job.id, company: job.agentName));
       },
       child: Padding(
         padding: const EdgeInsets.only(bottom: 8.0),

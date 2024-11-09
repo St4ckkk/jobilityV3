@@ -19,7 +19,7 @@ class BookMarkTile extends StatelessWidget {
       child: GestureDetector(
         onTap: () {
           Get.to(() => JobDetails(
-              title: bookmark.job.title, id: bookmark.job.id, agentName: bookmark.job.agentName));
+              title: bookmark.job.title, id: bookmark.job.id, company: bookmark.job.agentName));
         },
         child: Padding(
           padding: const EdgeInsets.only(bottom: 8.0),

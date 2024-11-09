@@ -106,10 +106,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     services.removeStatus(zoomNotifier, loginNotifier);
 
     // Debugging statement
-    debugPrint('HomePage: userUid in build: ${loginNotifier.userUid}');
+    print('HomePage: userUid in build: ${loginNotifier.userUid}');
 
     if (loginNotifier.userUid.isEmpty) {
-      debugPrint('Error: userUid is empty or null in HomePage');
+      print('Error: userUid is empty or null in HomePage');
     }
 
     return Scaffold(
@@ -189,7 +189,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                   Get.to(() => JobDetails(
                                     title: alert.jobId.title,
                                     id: alert.jobId.id,
-                                    agentName: alert.jobId.agentName,
+                                    company: alert.jobId.company,
                                   ));
                                 },
                                 child: CircleAvatar(
@@ -220,7 +220,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                 ],
                               ),
                               subtitle: Text(
-                                'A new job that matches your profile has been posted: ${alert.jobId.title}',
+                                'A new job that matches your profile has been posted: ${alert.jobId.company}',
                                 style: appStyle(12, Color(kDarkGrey.value), FontWeight.normal),
                               ),
                               trailing: IconButton(

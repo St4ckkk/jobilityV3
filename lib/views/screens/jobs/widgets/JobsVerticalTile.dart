@@ -19,7 +19,7 @@ class JobsVerticalTile extends StatelessWidget {
       child: GestureDetector(
         onTap: () {
           Get.to(() => JobDetails(
-              title: job.title, id: job.id, agentName: job.agentName));
+              title: job.title, id: job.id, company: job.company));
         },
         child: Padding(
           padding: const EdgeInsets.only(bottom: 8.0),

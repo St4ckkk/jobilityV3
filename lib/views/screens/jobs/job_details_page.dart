@@ -37,12 +37,12 @@ class JobDetails extends StatefulWidget {
     super.key,
     required this.title,
     required this.id,
-    required this.agentName,
+    required this.company,
   });
 
   final String title;
   final String id;
-  final String agentName;
+  final String company;
 
   @override
   State<JobDetails> createState() => _JobDetailsState();
@@ -57,6 +57,7 @@ class _JobDetailsState extends State<JobDetails> with SingleTickerProviderStateM
   int _selectedTabIndex = 0;
   double _rating = 0.0;
   TextEditingController _reviewController = TextEditingController();
+  int _selectedRatingFilter = 0;
 
   @override
   void initState() {
@@ -93,38 +94,35 @@ class _JobDetailsState extends State<JobDetails> with SingleTickerProviderStateM
     isAgent = prefs.getBool('isAgent') ?? false;
   }
 
-  createChat(Map<String, dynamic> jobDetails, List<String> users, String chatRoomId, String messageType) async {
+  Future<void> createChat(Map<String, dynamic> jobDetails, List<String> users, String chatRoomId, String messageType, String receiverUid) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? userUid = prefs.getString('uid');
-    String name = prefs.getString('name') ?? 'Anonymous';
-    String profile = prefs.getString('profile') ?? '';
+    String? senderUid = prefs.getString('uid');
+    String senderName = prefs.getString('name') ?? 'Anonymous';
+    String senderProfile = prefs.getString('profile') ?? '';
 
-    if (userUid == null || userUid.isEmpty) {
-      print('Error: User UID is empty or not found');
+    if (senderUid == null || senderUid.isEmpty) {
+      print('Error: Sender UID is empty or not found');
       return;
     }
 
     Map<String, dynamic> chatData = {
-      'agentName': widget.agentName,
-      'chatRoomId': chatRoomId,
-      'job': jobDetails,
-      'company': jobDetails['company'],
-      'image_url': jobDetails['image_url'],
-      'job_id': jobDetails['job_id'],
-      'salary': jobDetails['salary'],
-      'title': jobDetails['title'],
-      'lastChat': "Good Day, Sir! I'm interested in this job.",
-      'lastChatTime': Timestamp.now(),
-      'messageType': messageType,
-      'name': name,
-      'profile': profile,
-      'read': false,
-      'sender': userUid,
       'users': users,
+      'chatRoomId': chatRoomId,
+      'read': false,
+      'job': jobDetails,
+      'senderProfile': senderProfile,
+      'receiverProfile': jobDetails['image_url'],
+      'sender': senderUid,
+      'receiver': receiverUid,
+      'senderName': senderName,
+      'agentName': widget.company,
+      'messageType': messageType,
+      'lastChat': "Good Day, Sir! I'm interested in this job.",
+      'lastChatTime': Timestamp.now()
     };
 
     print('Creating chat room with data: $chatData');
-    services.createChatRoom(chatData);
+    await services.createChatRoom(chatData);
   }
 
   Widget _buildCompanyTab(GetJobRes job) {
@@ -151,84 +149,212 @@ class _JobDetailsState extends State<JobDetails> with SingleTickerProviderStateM
   Widget _buildReviewsTab() {
     return Padding(
       padding: EdgeInsets.all(16.w),
-      child: FutureBuilder<List<Review>>(
-        future: reviews,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Text(
-                "No reviews available yet",
-                style: appStyle(14, Color(kDarkGrey.value), FontWeight.normal),
+      child: Column(
+        children: [
+          // Filter by rating row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Filter by rating:",
+                style: appStyle(16, Color(kDark.value), FontWeight.bold),
               ),
-            );
-          } else {
-            final reviewsList = snapshot.data!;
-            return ListView.builder(
-              itemCount: reviewsList.length,
-              itemBuilder: (context, index) {
-                Review review = reviewsList[index];
-                return Container(
-                  margin: EdgeInsets.symmetric(vertical: 8.w),
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10.w),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        spreadRadius: 2,
-                        blurRadius: 5,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 20.w,
-                            backgroundImage: NetworkImage(review.reviewerId.profile),
-                          ),
-                          SizedBox(width: 10.w),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ReusableText(
-                                text: review.reviewerId.name,
-                                style: appStyle(16, Color(kDark.value), FontWeight.bold),
-                              ),
-                              RatingBarIndicator(
-                                rating: review.rating.toDouble(),
-                                itemBuilder: (context, index) => Icon(
-                                  Icons.star,
-                                  color: Colors.amber,
-                                ),
-                                itemCount: 5,
-                                itemSize: 20.0,
-                                direction: Axis.horizontal,
+              DropdownButton<int>(
+                value: _selectedRatingFilter,
+                items: [
+                  DropdownMenuItem(value: 0, child: Text("All")),
+                  DropdownMenuItem(value: 1, child: Text("1 Star")),
+                  DropdownMenuItem(value: 2, child: Text("2 Stars")),
+                  DropdownMenuItem(value: 3, child: Text("3 Stars")),
+                  DropdownMenuItem(value: 4, child: Text("4 Stars")),
+                  DropdownMenuItem(value: 5, child: Text("5 Stars")),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _selectedRatingFilter = value!;
+                  });
+                },
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          // Reviews list
+          Expanded(
+            child: FutureBuilder<List<Review>>(
+              future: reviews,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(
+                    child: Text(
+                      "No reviews available yet",
+                      style: appStyle(14, Color(kDarkGrey.value), FontWeight.normal),
+                    ),
+                  );
+                } else {
+                  final reviewsList = snapshot.data!
+                      .where((review) => _selectedRatingFilter == 0 || review.rating == _selectedRatingFilter)
+                      .toList();
+                  return GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 10.w,
+                      mainAxisSpacing: 10.w,
+                      childAspectRatio: 4 / 4,
+                    ),
+                    itemCount: reviewsList.length,
+                    itemBuilder: (context, index) {
+                      Review review = reviewsList[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation, secondaryAnimation) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: AlertDialog(
+                                    content: SingleChildScrollView(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 20.w,
+                                                backgroundImage: NetworkImage(review.reviewerId.profile),
+                                              ),
+                                              SizedBox(width: 10.w),
+                                              Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  ReusableText(
+                                                    text: review.reviewerId.name,
+                                                    style: appStyle(16, Color(kDark.value), FontWeight.bold),
+                                                  ),
+                                                  RatingBarIndicator(
+                                                    rating: review.rating.toDouble(),
+                                                    itemBuilder: (context, index) => Icon(
+                                                      Icons.star,
+                                                      color: Colors.amber,
+                                                    ),
+                                                    itemCount: 5,
+                                                    itemSize: 20.0,
+                                                    direction: Axis.horizontal,
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                          const HeightSpacer(size: 10),
+                                          Container(
+                                            padding: EdgeInsets.all(10.w),
+                                            decoration: BoxDecoration(
+                                              color: Colors.grey[200],
+                                              borderRadius: BorderRadius.circular(10.w),
+                                            ),
+                                            child: Text(
+                                              review.comment,
+                                              style: appStyle(14, Color(kDarkGrey.value), FontWeight.normal),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Text('Close'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                );
+                              },
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(12.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10.w),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.2),
+                                spreadRadius: 2,
+                                blurRadius: 5,
+                                offset: Offset(0, 3),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                      const HeightSpacer(size: 10),
-                      Text(
-                        review.comment,
-                        style: appStyle(14, Color(kDarkGrey.value), FontWeight.normal),
-                      ),
-                    ],
-                  ),
-                );
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 20.w,
+                                    backgroundImage: NetworkImage(review.reviewerId.profile),
+                                  ),
+                                  SizedBox(width: 10.w),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        ReusableText(
+                                          text: review.reviewerId.name,
+                                          style: appStyle(16, Color(kDark.value), FontWeight.bold),
+                                        ),
+                                        RatingBarIndicator(
+                                          rating: review.rating.toDouble(),
+                                          itemBuilder: (context, index) => Icon(
+                                            Icons.star,
+                                            color: Colors.amber,
+                                          ),
+                                          itemCount: 5,
+                                          itemSize: 20.0,
+                                          direction: Axis.horizontal,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const HeightSpacer(size: 10),
+                              Container(
+                                padding: EdgeInsets.all(10.w),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(10.w),
+                                ),
+                                child: Text(
+                                  review.comment,
+                                  style: appStyle(14, Color(kDarkGrey.value), FontWeight.normal),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
               },
-            );
-          }
-        },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -567,13 +693,14 @@ class _JobDetailsState extends State<JobDetails> with SingleTickerProviderStateM
                           List<String> users = [job.agentId, userUid];
                           String chatRoomId = '${job.id}.$userUid';
                           String messageType = 'text';
+                          String receiverId = job.agentId; // Assuming the agent is the receiver
 
                           print('Constructed chatRoomId: $chatRoomId');
 
                           bool doesChatExist = await services.chatRoomExist(chatRoomId);
 
                           if (!doesChatExist) {
-                            createChat(jobDetails, users, chatRoomId, messageType);
+                            createChat(jobDetails, users, chatRoomId, messageType, receiverId);
                             AppliedPost model = AppliedPost(job: job.id);
                             var newModel = appliedPostToJson(model);
                             AppliedHelper.applyJob(newModel);

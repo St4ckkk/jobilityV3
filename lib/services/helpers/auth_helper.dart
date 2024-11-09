@@ -60,7 +60,12 @@ class AuthHelper {
       await prefs.setBool('loggedIn', true);
 
       // Debugging statements
-      debugPrint('AuthHelper: Stored user UID: ${user.uid}');
+      print('AuthHelper: Stored user UID: ${user.uid}');
+      print('AuthHelper: Stored isAgent: ${user.isAgent}');
+      print('AuthHelper: Stored userId: ${user.id}');
+      print('AuthHelper: Stored username: ${user.username}');
+      print('AuthHelper: Stored name: ${user.name}');
+      print('AuthHelper: Stored profile: ${user.profile}');
 
       return true;
     } else {
