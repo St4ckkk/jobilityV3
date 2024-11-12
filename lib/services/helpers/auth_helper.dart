@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:file_picker/file_picker.dart';
@@ -7,9 +8,11 @@ import 'package:jobility/models/response/auth/login_res_model.dart';
 import 'package:jobility/models/response/auth/profile_model.dart';
 import 'package:jobility/models/response/auth/skills.dart';
 import 'package:jobility/services/config.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 import '../../models/request/auth/update_user_profile.dart';
+import '../../models/response/auth/get_resume.dart';
 import '../../models/response/auth/upload_resume_model.dart';
 
 class AuthHelper {
@@ -24,7 +27,8 @@ class AuthHelper {
 
       var url = Uri.https(Config.apiUrl, Config.signupUrl);
 
-      var response = await client.post(url, headers: requestHeaders, body: model);
+      var response = await client.post(
+          url, headers: requestHeaders, body: model);
 
       if (response.statusCode == 201) {
         return true;
@@ -51,7 +55,8 @@ class AuthHelper {
       var user = loginResponseModelFromJson(response.body);
 
       await prefs.setString('token', user.userToken);
-      await prefs.setString('userId', user.id); // Ensure this is the correct key
+      await prefs.setString(
+          'userId', user.id); // Ensure this is the correct key
       await prefs.setString('uid', user.uid); // Storing user UID
       await prefs.setString('profile', user.profile);
       await prefs.setBool('isAgent', user.isAgent);
@@ -128,8 +133,13 @@ class AuthHelper {
       var response = await client.get(url, headers: requestHeaders);
 
       if (response.statusCode == 200) {
+        if (response.body.isEmpty) {
+          return []; // Return an empty list if the response body is empty
+        }
         var skills = skillsFromJson(response.body);
         return skills;
+      } else if (response.statusCode == 204) {
+        return []; // Return an empty list if there is no content
       } else {
         throw Exception('Failed to get skills');
       }
@@ -184,7 +194,8 @@ class AuthHelper {
     var url = Uri.https(Config.apiUrl, Config.skillsUrl);
 
     try {
-      var response = await client.post(url, headers: requestHeaders, body: model);
+      var response = await client.post(
+          url, headers: requestHeaders, body: model);
 
       if (response.statusCode == 200) {
         return true;
@@ -220,7 +231,8 @@ class AuthHelper {
     print('Request Body: ${profileUpdateToJson(profileUpdate)}');
 
     try {
-      var response = await client.put(url, headers: requestHeaders, body: profileUpdateToJson(profileUpdate));
+      var response = await client.put(url, headers: requestHeaders,
+          body: profileUpdateToJson(profileUpdate));
 
       print('Response Status Code: ${response.statusCode}');
       print('Response Body: ${response.body}');
@@ -246,7 +258,8 @@ class AuthHelper {
 
     try {
       // Pick the file
-      FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+          type: FileType.custom, allowedExtensions: ['pdf']);
       if (result == null) return false; // No file selected
 
       var filePath = result.files.single.path;
@@ -255,7 +268,8 @@ class AuthHelper {
 
       // Preparing FormData with the file
       var formData = FormData.fromMap({
-        'resume': await MultipartFile.fromFile(filePath, filename: 'resume.pdf', contentType: MediaType('application', 'pdf')),
+        'resume': await MultipartFile.fromFile(filePath, filename: 'resume.pdf',
+            contentType: MediaType('application', 'pdf')),
       });
 
       // Setting up Dio with headers
@@ -293,4 +307,58 @@ class AuthHelper {
       return false;
     }
   }
+
+  static Future<String?> getResume(String id) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('No authentication token provided');
+    }
+
+    Map<String, String> requestHeaders = {
+      'Content-Type': 'application/json',
+      'authorization': 'Bearer $token'
+    };
+
+    var url = Uri.https(Config.apiUrl, "${Config.resumeUrl}/$id");
+
+    try {
+      var response = await client.get(url, headers: requestHeaders);
+
+      if (response.statusCode == 200) {
+        var getResumeResponse = getResumeFromJson(response.body);
+
+        // Just return the base64 encoded PDF string directly
+        // We'll decode it later when saving to file
+        return getResumeResponse.resume;
+      } else {
+        print('Failed to get resume: ${response.statusCode} ${response.body}');
+        throw Exception('Failed to get resume');
+      }
+    } catch (e) {
+      print('Exception in getResume: $e');
+      throw Exception('Failed to get resume: $e');
+    }
+  }
 }
+
+// In your ProfilePage class, update the _fetchAndDecodeResume method:
+Future<File> _fetchAndDecodeResume(String base64String) async {
+  try {
+    // Normalize and decode the base64 string directly to bytes
+    final bytes = base64.decode(base64.normalize(base64String));
+
+    // Get the application documents directory
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/resume.pdf');
+
+    // Write the bytes directly to the file
+    await file.writeAsBytes(bytes);
+    return file;
+  } catch (e) {
+    print('Error decoding resume: $e');
+    throw Exception('Failed to decode resume');
+  }
+  }
+

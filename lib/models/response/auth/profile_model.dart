@@ -17,6 +17,7 @@ class ProfileRes {
         required this.profile,
         this.disability,  // Made optional since it's not required in MongoDB
         this.pwdIdImage,  // Made optional since it's not required in MongoDB
+        this.resume,
     });
 
     final String id;
@@ -29,6 +30,7 @@ class ProfileRes {
     final String profile;
     final String? disability;  // Nullable String since it's optional
     final String? pwdIdImage;  // Nullable String since it's optional
+    final String? resume;
 
     factory ProfileRes.fromJson(Map<String, dynamic> json) {
         try {
@@ -43,6 +45,7 @@ class ProfileRes {
                 profile: json["profile"] ?? '',
                 disability: json["disability"],  // No default value needed since it's nullable
                 pwdIdImage: json["pwdIdImage"],  // No default value needed since it's nullable
+                resume: json["resume"]
             );
         } catch (e) {
             print("Error in ProfileRes.fromJson: $e"); // Debug print

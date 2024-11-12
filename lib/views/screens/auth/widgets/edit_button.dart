@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:jobility/constants/app_constants.dart';
 import 'package:jobility/views/common/app_style.dart';
@@ -17,14 +16,18 @@ class EditButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20), // Increased padding
         decoration: BoxDecoration(
-            color: Color(kOrange.value),
-            borderRadius: const BorderRadius.only(
-                topRight: Radius.circular(9), bottomLeft: Radius.circular(9))),
+          color: Color(kOrange.value),
+          borderRadius: const BorderRadius.only(
+            topRight: Radius.circular(9),
+            bottomLeft: Radius.circular(9),
+          ),
+        ),
         child: ReusableText(
-            text: "  Edit  ",
-            style: appStyle(12, Color(kLight.value), FontWeight.w500)),
+          text: "Upload",
+          style: appStyle(16, Color(kLight.value), FontWeight.w500), // Increased font size
+        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -160,17 +161,39 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         style: appStyle(15, Color(kDark.value), FontWeight.w600),
                       ),
                       const HeightSpacer(size: 10),
-                      ClipRRect(
-                        borderRadius: BorderRadius.all(Radius.circular(12.w)),
-                        child: CachedNetworkImage(
-                          imageUrl: profile!.pwdIdImage!,
-                          width: 200.w,
-                          height: 120.h,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator.adaptive(),
+                      Container(
+                        width: 300.w,
+                        height: 200.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12.w),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12.w),
+                          child: profile!.pwdIdImage!.startsWith('http')
+                              ? CachedNetworkImage(
+                            imageUrl: profile!.pwdIdImage!,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => const Center(
+                              child: CircularProgressIndicator.adaptive(),
+                            ),
+                            errorWidget: (context, url, error) => const Icon(Icons.error),
+                          )
+                              : Image.file(
+                            File(profile!.pwdIdImage!),
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
                           ),
-                          errorWidget: (context, url, error) => const Icon(Icons.error),
                         ),
                       ),
                     ],

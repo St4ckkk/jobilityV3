@@ -11,6 +11,7 @@ class Config {
   static const String profileUpdateUrl = "/api/users/profile";
   static const String jobAlertsUrl = "/api/jobs/alerts/user/";
   static const String uploadResumeUrl = "/api/users/upload-resume";
+  static const String resumeUrl = "/api/users/resume";
   static const String skillsUrl = "/api/users/skills";
   static const String getAgentsUrl = "/api/users/agents";
   static const String getprofileUrl = "/api/users";

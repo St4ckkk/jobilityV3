@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -23,7 +25,9 @@ import 'package:jobility/views/screens/jobs/add_jobs.dart';
 import 'package:jobility/views/screens/mainscreen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:jobility/views/screens/auth/widgets/resume_preview.dart';
 import 'edit_profile_page.dart';
 import 'login.dart';
 
@@ -37,6 +41,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   ProfileRes? profile;
   bool isLoading = true;
+  bool isPreviewLoading = false; // New state variable
   String defaultImage = "https://d326fntlu7tb1e.cloudfront.net/uploads/b5065bb8-4c6b-4eac-a0ce-86ab0f597b1e-vinci_04.jpg";
 
   @override
@@ -140,14 +145,18 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
           GestureDetector(
-              onTap: () => _handleEditProfile(),
-              child: Padding(
-                padding: EdgeInsets.only(top: 10.0.w),
+            onTap: () => _handleEditProfile(),
+            child: Padding(
+              padding: EdgeInsets.only(top: 10.0.w),
+              child: Tooltip(
+                message: 'Edit Profile', // Tooltip message for better accessibility
                 child: Icon(
                   Feather.edit,
                   color: Color(kLight.value),
+                  semanticLabel: 'Edit Profile', // Accessibility label
                 ),
-              )
+              ),
+            ),
           )
         ],
       ),
@@ -173,6 +182,7 @@ class _ProfilePageState extends State<ProfilePage> {
         buildAgentSection(),
         const HeightSpacer(size: 20),
         buildLogoutButton(),
+        const HeightSpacer(size: 20),
       ],
     );
   }
@@ -210,11 +220,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ReusableText(
-                      text: "Upload Your Resume",
+                      text: "Your Resume",
                       style: appStyle(16, Color(kDark.value), FontWeight.w500)
                   ),
                   Text(
-                      "Please make sure to upload your resume in PDF format",
+                      profile?.resume != null
+                          ? "Click to preview your resume"
+                          : "Upload your resume (PDF format)",
                       style: appStyle(8, Color(kDarkGrey.value), FontWeight.w500)
                   ),
                 ],
@@ -222,10 +234,64 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
         ),
+        // Make the entire container clickable for preview
+        if (profile?.resume != null)
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () async {
+                  setState(() { isPreviewLoading = true; }); // Start loading
+                  try {
+                    String? base64Resume = await AuthHelper.getResume(profile!.id);
+                    if (base64Resume != null) {
+                      File resumeFile = await fetchAndDecodeResume(base64Resume);
+                      openPDFViewer(context, resumeFile);
+                    } else {
+                      Get.snackbar(
+                          "Error",
+                          "Failed to fetch resume",
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white
+                      );
+                    }
+                  } catch (e) {
+                    print('Error fetching resume: $e');
+                    Get.snackbar(
+                        "Error",
+                        "Failed to fetch resume",
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white
+                    );
+                  } finally {
+                    setState(() { isPreviewLoading = false; }); // End loading
+                  }
+                },
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        // Edit/Upload button
         Positioned(
           right: 0.w,
-          child: EditButton(onTap: () => _handleResumeUpload()),
-        )
+          child: EditButton(
+              onTap: () async {
+                await _handleResumeUpload();
+                // Refresh profile after upload
+                await initializeProfile();
+              }
+          ),
+        ),
+        // Loader
+        if (isPreviewLoading)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black45,
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -261,17 +327,28 @@ class _ProfilePageState extends State<ProfilePage> {
                   style: appStyle(15, Color(kDark.value), FontWeight.w600),
                 ),
                 const HeightSpacer(size: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(12.w)),
-                  child: CachedNetworkImage(
-                    imageUrl: profile!.pwdIdImage!,
-                    width: 300.w,
-                    height: 200.h,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => const Center(
-                      child: CircularProgressIndicator.adaptive(),
+                Container(
+                  width: 350.w, // Increased width
+                  height: 200.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12.w),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12.w),
+                    child: Image.file(
+                      File(profile!.pwdIdImage!),
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
                     ),
-                    errorWidget: (context, url, error) => const Icon(Icons.error),
                   ),
                 ),
               ],
