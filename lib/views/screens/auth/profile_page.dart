@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +29,7 @@ import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:jobility/views/screens/auth/widgets/resume_preview.dart';
 import 'edit_profile_page.dart';
 import 'login.dart';
+import 'package:intl/intl.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key, required this.drawer});
@@ -37,6 +37,7 @@ class ProfilePage extends StatefulWidget {
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
+
 
 class _ProfilePageState extends State<ProfilePage> {
   ProfileRes? profile;
@@ -167,6 +168,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       children: [
+        buildProfileCompletionMessage(), // Add profile completion message at the top
         const HeightSpacer(size: 30),
         ReusableText(
             text: 'Profile',
@@ -177,6 +179,10 @@ class _ProfilePageState extends State<ProfilePage> {
         const HeightSpacer(size: 20),
         const SkillsWidget(),
         const HeightSpacer(size: 20),
+        buildEducationSection(), // Add education section
+        const HeightSpacer(size: 20),
+        buildExperienceSection(), // Add experience section
+        const HeightSpacer(size: 20),
         buildDisabilitySection(), // Add disability section
         const HeightSpacer(size: 20),
         buildAgentSection(),
@@ -185,6 +191,47 @@ class _ProfilePageState extends State<ProfilePage> {
         const HeightSpacer(size: 20),
       ],
     );
+  }
+
+  Widget buildProfileCompletionMessage() {
+    int missingDetails = 0;
+    if (profile?.resume == null) missingDetails++;
+    if (profile?.education == null || profile!.education!.isEmpty) missingDetails++;
+    if (profile?.experience == null || profile!.experience!.isEmpty) missingDetails++;
+
+    if (missingDetails >= 1) {
+      return Container(
+        padding: EdgeInsets.all(12.w),
+        margin: EdgeInsets.only(top: 20.h, bottom: 20.h),
+        decoration: BoxDecoration(
+          color: Colors.blue[50],
+          borderRadius: BorderRadius.circular(12.w),
+          border: Border.all(color: Colors.blue, width: 1.w),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ReusableText(
+                text: 'Complete your profile to get the most out of our platform',
+                style: appStyle(16, Colors.blue[900]!, FontWeight.bold)
+            ),
+            const HeightSpacer(size: 10),
+            LinearProgressIndicator(
+              value: (3 - missingDetails) / 3,
+              backgroundColor: Colors.grey[300],
+              color: Colors.blue,
+            ),
+            const HeightSpacer(size: 10),
+            ReusableText(
+                text: 'Add the missing details to complete your profile.',
+                style: appStyle(14, Colors.blue[900]!, FontWeight.w400)
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Container();
+    }
   }
 
   Widget buildResumeSection() {
@@ -293,6 +340,117 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
       ],
+    );
+  }
+
+  String formatDate(DateTime date) {
+    return DateFormat.yMMMd().format(date);
+  }
+
+  Widget buildEducationSection() {
+    if (profile?.education != null && profile!.education!.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ReusableText(
+              text: 'Education',
+              style: appStyle(18, Color(kDark.value), FontWeight.bold)
+          ),
+          const HeightSpacer(size: 10),
+          ...profile!.education!.map((education) => buildCard(
+            title: education.institution,
+            subtitle: education.degree,
+            description: education.fieldOfStudy,
+            date: "${formatDate(education.startDate)} - ${formatDate(education.endDate)}",
+          )).toList(),
+        ],
+      );
+    } else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ReusableText(
+              text: 'Education',
+              style: appStyle(18, Color(kDark.value), FontWeight.bold)
+          ),
+          const HeightSpacer(size: 10),
+          ReusableText(
+              text: 'No education details available.',
+              style: appStyle(14, Color(kDarkGrey.value), FontWeight.w400)
+          ),
+        ],
+      );
+    }
+  }
+
+  Widget buildExperienceSection() {
+    if (profile?.experience != null && profile!.experience!.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ReusableText(
+              text: 'Experience',
+              style: appStyle(18, Color(kDark.value), FontWeight.bold)
+          ),
+          const HeightSpacer(size: 10),
+          ...profile!.experience!.map((experience) => buildCard(
+            title: experience.company,
+            subtitle: experience.position,
+            description: experience.description ?? '',
+            date: "${formatDate(experience.startDate)} - ${formatDate(experience.endDate)}",
+          )).toList(),
+        ],
+      );
+    } else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ReusableText(
+              text: 'Experience',
+              style: appStyle(18, Color(kDark.value), FontWeight.bold)
+          ),
+          const HeightSpacer(size: 10),
+          ReusableText(
+              text: 'No experience details available.',
+              style: appStyle(14, Color(kDarkGrey.value), FontWeight.w400)
+          ),
+        ],
+      );
+    }
+  }
+
+  Widget buildCard({required String title, required String subtitle, required String description, required String date}) {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      margin: EdgeInsets.only(bottom: 10.h),
+      decoration: BoxDecoration(
+          color: Color(kLightGrey.value),
+          borderRadius: const BorderRadius.all(Radius.circular(12))
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ReusableText(
+            text: title,
+            style: appStyle(16, Color(kDark.value), FontWeight.bold),
+          ),
+          const HeightSpacer(size: 5),
+          ReusableText(
+            text: subtitle,
+            style: appStyle(14, Color(kDarkGrey.value), FontWeight.w600),
+          ),
+          const HeightSpacer(size: 5),
+          ReusableText(
+            text: description,
+            style: appStyle(14, Color(kDarkGrey.value), FontWeight.w400),
+          ),
+          const HeightSpacer(size: 5),
+          ReusableText(
+            text: date,
+            style: appStyle(12, Color(kDarkGrey.value), FontWeight.w300),
+          ),
+        ],
+      ),
     );
   }
 
@@ -493,6 +651,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
+
 class CircularAvata extends StatelessWidget {
   const CircularAvata({
     super.key,
@@ -507,9 +666,18 @@ class CircularAvata extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isLocalFile = image.startsWith('/');
+
     return ClipRRect(
       borderRadius: BorderRadius.all(Radius.circular(99.w)),
-      child: CachedNetworkImage(
+      child: isLocalFile
+          ? Image.file(
+        File(image),
+        width: w,
+        height: h,
+        fit: BoxFit.cover,
+      )
+          : CachedNetworkImage(
         imageUrl: image,
         width: w,
         height: h,

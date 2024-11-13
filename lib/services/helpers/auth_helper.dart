@@ -55,8 +55,7 @@ class AuthHelper {
       var user = loginResponseModelFromJson(response.body);
 
       await prefs.setString('token', user.userToken);
-      await prefs.setString(
-          'userId', user.id); // Ensure this is the correct key
+      await prefs.setString('userId', user.id); // Ensure this is the correct key
       await prefs.setString('uid', user.uid); // Storing user UID
       await prefs.setString('profile', user.profile);
       await prefs.setBool('isAgent', user.isAgent);
@@ -211,7 +210,7 @@ class AuthHelper {
   static Future<bool> updateProfile(ProfileUpdate profileUpdate) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
-    String? id = prefs.getString('id');
+    String? id = prefs.getString('userId'); // Use 'userId' instead of 'id'
 
     if (token == null || id == null) {
       throw Exception('No authentication token or id provided');
