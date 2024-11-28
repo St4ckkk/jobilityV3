@@ -16,6 +16,7 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController controller = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,44 +25,57 @@ class _SearchPageState extends State<SearchPage> {
         automaticallyImplyLeading: false,
         elevation: 0,
         title: ClipRRect(
-            borderRadius: BorderRadius.all(
-              Radius.circular(25.w),
-            ),
-            child: CustomField(
-              controller: controller,
-              onTap: () {
-                setState(() {});
-              },
-            )),
+          borderRadius: BorderRadius.all(
+            Radius.circular(25.w),
+          ),
+          child: CustomField(
+            controller: controller,
+            onTap: () {
+              setState(() {});
+            },
+          ),
+        ),
       ),
       body: controller.text.isNotEmpty
           ? Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.w),
-              child: FutureBuilder<List<JobsResponse>>(
-                  future: JobsHelper.searchJobs(controller.text),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                          child: CircularProgressIndicator.adaptive());
-                    } else if (snapshot.hasError) {
-                      return Text("Error: ${snapshot.error}");
-                    } else if (snapshot.data!.isEmpty) {
-                      return const Text("No Jobs Available");
-                    } else {
-                      final jobs = snapshot.data;
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.w),
+        child: FutureBuilder<List<JobsResponse>>(
+          future: JobsHelper.searchJobs(controller.text),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator.adaptive(),
+              );
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text("Error: ${snapshot.error}"),
+              );
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(
+                child: Image.asset(
+                  'assets/images/no-job-found.png',
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.contain,
+                ),
+              );
+            } else {
+              final jobs = snapshot.data;
 
-                      return ListView.builder(
-                        itemCount: jobs!.length,
-                        scrollDirection: Axis.vertical,
-                        itemBuilder: (context, index) {
-                          var job = jobs[index];
-                          return JobsVerticalTile(
-                            job: job,
-                          );
-                        },
-                      );
-                    }
-                  }))
+              return ListView.builder(
+                itemCount: jobs!.length,
+                scrollDirection: Axis.vertical,
+                itemBuilder: (context, index) {
+                  var job = jobs[index];
+                  return JobsVerticalTile(
+                    job: job,
+                  );
+                },
+              );
+            }
+          },
+        ),
+      )
           : const NoSearchResults(text: 'Start Searching...'),
     );
   }
