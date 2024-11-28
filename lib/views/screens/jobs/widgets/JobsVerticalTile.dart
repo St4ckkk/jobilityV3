@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
@@ -41,7 +42,9 @@ class JobsVerticalTile extends StatelessWidget {
                       children: [
                         CircleAvatar(
                           radius: 30,
-                          backgroundImage: NetworkImage(job.imageUrl),
+                          backgroundImage: job.imageUrl.startsWith('http')
+                              ? NetworkImage(job.imageUrl)
+                              : FileImage(File(job.imageUrl)) as ImageProvider,
                         ),
                         SizedBox(
                           width: 10.w,

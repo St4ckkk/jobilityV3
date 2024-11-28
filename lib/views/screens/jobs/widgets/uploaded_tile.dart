@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -41,8 +43,10 @@ class UploadedTile extends StatelessWidget {
                     Row(
                       children: [
                         CircleAvatar(
-                          radius: 30,
-                          backgroundImage: NetworkImage(job.imageUrl),
+                          radius: 30.w,
+                          backgroundImage: job!.imageUrl.startsWith('http')
+                              ? NetworkImage(job.imageUrl)
+                              : FileImage(File(job.imageUrl)) as ImageProvider,
                         ),
                         SizedBox(
                           width: 10.w,

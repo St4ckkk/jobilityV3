@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
@@ -42,13 +43,15 @@ class JobHorizontalTile extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         radius: 25,
-                        backgroundImage: NetworkImage(job.imageUrl),
+                        backgroundImage: job.imageUrl.startsWith('http')
+                            ? NetworkImage(job.imageUrl)
+                            : FileImage(File(job.imageUrl)) as ImageProvider,
                       ),
                       const WidthSpacer(width: 15),
                       Container(
                         width: 160.w,
                         padding:
-                            EdgeInsetsDirectional.symmetric(horizontal: 20.w),
+                        EdgeInsetsDirectional.symmetric(horizontal: 20.w),
                         decoration: BoxDecoration(
                           color: Color(kLight.value),
                           borderRadius: BorderRadius.all(
@@ -66,41 +69,33 @@ class JobHorizontalTile extends StatelessWidget {
                   ReusableText(
                       text: job.title,
                       style: appStyle(18, Color(kDark.value), FontWeight.w600)),
-                 
                   const HeightSpacer(size: 5),
-
                   ReusableText(
                       text: job.location,
                       style: appStyle(
                           16, Color(kDarkGrey.value), FontWeight.w600)),
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                        Row(
-                          children: [
-                            ReusableText(
-                      text: job.salary,
-                      style: appStyle(
-                              20, Color(kDark.value), FontWeight.w600)),
-
-                              ReusableText(
-                      text: "/${job.period}",
-                      style: appStyle(
-                              18, Color(kDarkGrey.value), FontWeight.w600)),
-                          ],
-                        ),
-
-                         CircleAvatar(
-                  radius: 18,
-                  backgroundColor: Color(kLight.value),
-                  child: const Icon(Ionicons.chevron_forward),
-                )
+                      Row(
+                        children: [
+                          ReusableText(
+                              text: job.salary,
+                              style: appStyle(
+                                  20, Color(kDark.value), FontWeight.w600)),
+                          ReusableText(
+                              text: "/${job.period}",
+                              style: appStyle(
+                                  18, Color(kDarkGrey.value), FontWeight.w600)),
+                        ],
+                      ),
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: Color(kLight.value),
+                        child: const Icon(Ionicons.chevron_forward),
+                      )
                     ],
                   ),
-                
-               
-                
                 ],
               ),
             ),

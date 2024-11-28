@@ -142,9 +142,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
         username: _usernameController.text,
         name: _nameController.text,
         email: _emailController.text,
-        skills: profile?.skills.map((skill) => skill.toString()).toList() ?? [], // Keep the existing skills
-        profile: profileImage?.path ?? profile?.profile ?? defaultImage, // Change profileImage to profile
-        pwdIdImage: pwdIdImage?.path ?? profile?.pwdIdImage ?? '', // Add pwdIdImage
+        skills: profile?.skills.map((skill) => skill.toString()).toList() ?? [],
+        profile: profileImage?.path ?? profile?.profile ?? defaultImage,
+        pwdIdImage: pwdIdImage?.path ?? profile?.pwdIdImage ?? '',
         education: _educationList,
         experience: _experienceList,
       );
@@ -202,7 +202,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             : DateTime.parse(_experienceList[index].endDate);
       }
     } catch (e) {
-      // If parsing fails, use the current date as the initial date
+
       initialDate = DateTime.now();
     }
 

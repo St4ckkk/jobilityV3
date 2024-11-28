@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,8 +12,6 @@ import 'package:jobility/views/common/app_style.dart';
 import 'package:jobility/views/common/drawer/drawer_widget.dart';
 import 'package:jobility/views/common/heading_widget.dart';
 import 'package:jobility/views/common/search.dart';
-import 'package:jobility/views/screens/auth/login.dart';
-import 'package:jobility/views/screens/auth/profile_page.dart';
 import 'package:jobility/views/screens/jobs/job_list_page.dart';
 import 'package:jobility/views/screens/jobs/widgets/PopularJobs.dart';
 import 'package:jobility/views/screens/jobs/widgets/Recentlist.dart';
@@ -20,9 +19,6 @@ import 'package:jobility/views/screens/search/search_page.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jobility/services/helpers/jobs_helper.dart';
-
-import 'package:jobility/controllers/jobs_provider.dart';
-
 import '../../../controllers/profile_provider.dart';
 import '../../../models/response/jobs/get_jobAlerts.dart';
 import '../jobs/job_details_page.dart';
@@ -135,11 +131,15 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                           return Text("error ${snapshot.error}");
                         } else {
                           var url = snapshot.data!.profile;
+                          bool isLocalFile = url.startsWith('/');
+
                           return Padding(
                             padding: EdgeInsets.all(12.h),
                             child: CircleAvatar(
                               radius: 15,
-                              backgroundImage: NetworkImage(url),
+                              backgroundImage: isLocalFile
+                                  ? FileImage(File(url))
+                                  : NetworkImage(url) as ImageProvider,
                             ),
                           );
                         }
@@ -183,51 +183,93 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                             _dismissNotification(alert);
                           },
                           child: Card(
-                            child: ListTile(
-                              leading: GestureDetector(
-                                onTap: () {
-                                  Get.to(() => JobDetails(
-                                    title: alert.jobId.title,
-                                    id: alert.jobId.id,
-                                    company: alert.jobId.company,
-                                  ));
-                                },
-                                child: CircleAvatar(
-                                  backgroundImage: CachedNetworkImageProvider(alert.jobId.imageUrl),
-                                  radius: 20,
+                            margin: EdgeInsets.symmetric(vertical: 10.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            elevation: 5,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: AssetImage('assets/images/your_background_image.jpg'),
+                                  fit: BoxFit.cover,
                                 ),
+                                borderRadius: BorderRadius.circular(15.0),
                               ),
-                              title: Row(
-                                children: [
-                                  ScaleTransition(
-                                    scale: _scaleAnimation,
-                                    child: Icon(
-                                      Icons.error_outline,
-                                      color: Colors.red,
-                                      size: 20,
+                              child: Padding(
+                                padding: EdgeInsets.all(15.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () {
+                                            Get.to(() => JobDetails(
+                                              title: alert.jobId.title,
+                                              id: alert.jobId.id,
+                                              company: alert.jobId.company,
+                                            ));
+                                          },
+                                          child: CircleAvatar(
+                                            backgroundImage: CachedNetworkImageProvider(alert.jobId.imageUrl),
+                                            radius: 30,
+                                          ),
+                                        ),
+                                        SizedBox(width: 10.w),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                alert.jobId.title,
+                                                style: appStyle(16, Color(kDark.value), FontWeight.bold),
+                                              ),
+                                              Text(
+                                                alert.jobId.company,
+                                                style: appStyle(14, Color(kDarkGrey.value), FontWeight.normal),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: Icon(Icons.close, color: Colors.red, size: 20),
+                                          onPressed: () {
+                                            _dismissNotification(alert);
+                                          },
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  SizedBox(width: 8),
-                                  AnimatedBuilder(
-                                    animation: _controller,
-                                    builder: (context, child) {
-                                      return Text(
-                                        'New Job Alert',
-                                        style: appStyle(14, _colorTween.value!, FontWeight.bold),
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                              subtitle: Text(
-                                'A new job that matches your profile has been posted: ${alert.jobId.company}',
-                                style: appStyle(12, Color(kDarkGrey.value), FontWeight.normal),
-                              ),
-                              trailing: IconButton(
-                                icon: Icon(Icons.close, color: Colors.red, size: 20),
-                                onPressed: () {
-                                  _dismissNotification(alert);
-                                },
+                                    SizedBox(height: 10.h),
+                                    Text(
+                                      'A new job that matches your profile has been posted.',
+                                      style: appStyle(14, Color(kDarkGrey.value), FontWeight.normal),
+                                    ),
+                                    SizedBox(height: 10.h),
+                                    Row(
+                                      children: [
+                                        ScaleTransition(
+                                          scale: _scaleAnimation,
+                                          child: Icon(
+                                            Icons.error_outline,
+                                            color: Colors.red,
+                                            size: 20,
+                                          ),
+                                        ),
+                                        SizedBox(width: 8),
+                                        AnimatedBuilder(
+                                          animation: _controller,
+                                          builder: (context, child) {
+                                            return Text(
+                                              'New Job Alert',
+                                              style: appStyle(14, _colorTween.value!, FontWeight.bold),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
